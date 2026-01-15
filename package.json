@@ -1,0 +1,9 @@
+{
+  "name": "stock-dock",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/quoteParser.test.js && node tests/thresholdMap.test.js && node tests/stockLogic.test.js",
+    "check": "node tests/gjs-guard.test.js"
+  }
+}

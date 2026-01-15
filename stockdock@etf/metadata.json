@@ -1,0 +1,10 @@
+{
+  "uuid": "stockdock@etf",
+  "name": "Stock Dock",
+  "description": "Shows rotating stock prices in the top bar with gain/loss color and optional notifications.",
+  "version": 1,
+  "shell-version": ["47", "47.8", "48", "48.7"],
+  "settings-schema": "org.gnome.shell.extensions.stockdock",
+  "session-modes": ["user"],
+  "url": "https://github.com/IllyaYalovyy/stock-dock"
+}

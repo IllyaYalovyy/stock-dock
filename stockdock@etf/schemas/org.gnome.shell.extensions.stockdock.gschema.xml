@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.stockdock" path="/org/gnome/shell/extensions/stockdock/">
+    <key name="tickers" type="as">
+      <default>["aapl.us","msft.us"]</default>
+      <summary>Stock tickers</summary>
+      <description>List of tickers to rotate through.</description>
+    </key>
+    <key name="min-notify-map" type="a{sd}">
+      <default>{}</default>
+      <summary>Minimum price notification thresholds per ticker</summary>
+      <description>Notify when the price is at or below the ticker-specific value.</description>
+    </key>
+    <key name="max-notify-map" type="a{sd}">
+      <default>{}</default>
+      <summary>Maximum price notification thresholds per ticker</summary>
+      <description>Notify when the price is at or above the ticker-specific value.</description>
+    </key>
+    <key name="gain-color" type="s">
+      <default>"#2ecc71"</default>
+      <summary>Gain color</summary>
+      <description>Color for gains.</description>
+    </key>
+    <key name="loss-color" type="s">
+      <default>"#e74c3c"</default>
+      <summary>Loss color</summary>
+      <description>Color for losses.</description>
+    </key>
+  </schema>
+</schemalist>

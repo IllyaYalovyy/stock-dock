@@ -1,0 +1,111 @@
+node_modules/
+.DS_Store
+*.log
+npm-debug.log*
+.yarn/
+.pnp.*
+coverage/
+*.tgz
+*.zip
+*.tar.gz
+
+# GNOME shell extension build artifacts
+stockdock@etf/schemas/gschemas.compiled
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Trashes
+.Trash-*
+
+# Editor/IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.orig
+*.rej
+*.patch
+*.diff
+*.code-workspace
+.project
+.settings/
+.classpath
+
+# Logs and reports
+logs/
+*.log
+*.log.*
+*.out
+*.pid
+*.seed
+*.pid.lock
+*.stackdump
+report.xml
+junit.xml
+test-results/
+test-report/
+
+# Coverage and profiling
+coverage/
+.nyc_output/
+*.lcov
+*.prof
+*.heapprofile
+*.cpuprofile
+
+# Dependencies and package managers
+node_modules/
+jspm_packages/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log*
+.yarn/
+.pnp.*
+.npm/
+.node-gyp/
+
+# Builds and distributions
+dist/
+build/
+out/
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.turbo/
+.next/
+*.tgz
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Env and secrets
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+
+# Debug artifacts
+*.dSYM/
+*.su
+*.app
+*.deb
+*.rpm
+
+# Local GNOME extension copies
+*.zip
+*.tar.gz
+*.tgz
+*.deb
+*.rpm
