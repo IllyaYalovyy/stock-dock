@@ -2,9 +2,13 @@
 
 Stock Dock is a small GNOME Shell extension that rotates a handful of stock prices in the top bar. It keeps the UI compact, shows the daily change at a glance, and can alert you when a price crosses a threshold you care about.
 
+![Stock Dock panel](docs/screenshots/stockdock-panel.png)
+
+![Stock Dock preferences](docs/screenshots/stockdock-preferences.png)
+
 ## Why
 
-I wanted a tiny, no-frills way to watch a few tickers without opening a full dashboard. This extension focuses on a single line of information that updates regularly and stays out of the way.
+I wanted a tiny, simple way to watch a few tickers without opening a full dashboard. This extension focuses on a single line of information that updates regularly and stays out of the way.
 
 ## Features
 
