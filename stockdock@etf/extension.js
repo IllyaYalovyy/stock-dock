@@ -13,11 +13,12 @@ import {parseStooqCsv} from './lib/quoteParser.js';
 import {evaluateNotifications, formatQuoteLabel} from './lib/stockLogic.js';
 
 const FETCH_INTERVAL_SECONDS = 60;
+const CONTEXT_MENU_VERSION = 'Version: 0.1.1';
 
 const StockIndicator = GObject.registerClass(
 class StockIndicator extends PanelMenu.Button {
   constructor(extension, settings) {
-    super(0.0, 'Stock Dock');
+    super(0.0, 'Stock Dock', true);
     log('Stock Dock: indicator constructed');
 
     this._extension = extension;
@@ -25,6 +26,8 @@ class StockIndicator extends PanelMenu.Button {
     this._session = new Soup.Session();
     this._timeoutId = 0;
     this._index = 0;
+    this._updateToken = 0;
+    this._isDestroyed = false;
     this._notifyState = new Map();
 
     this._box = new St.BoxLayout({style_class: 'stockdock-box'});
@@ -40,22 +43,29 @@ class StockIndicator extends PanelMenu.Button {
     this._box.add_child(this._icon);
     this._box.add_child(this._label);
     this.add_child(this._box);
-
-    this._menuItem = new PopupMenu.PopupMenuItem('Preferences');
-    this._menuItem.connect('activate', () => {
-      this._extension.openPreferences().catch((error) => {
-        logError(error, 'Stock Dock preferences failed to open');
-      });
-    });
-    this.menu.addMenuItem(this._menuItem);
+    this._initContextMenu();
 
     this._start();
   }
 
   destroy() {
+    this._isDestroyed = true;
+    this._updateToken += 1;
     if (this._timeoutId) {
       GLib.source_remove(this._timeoutId);
       this._timeoutId = 0;
+    }
+    if (this._session) {
+      this._session.abort();
+      this._session = null;
+    }
+    if (this._menuManager && this._contextMenu) {
+      this._menuManager.removeMenu(this._contextMenu);
+      this._menuManager = null;
+    }
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
     }
     super.destroy();
   }
@@ -72,7 +82,59 @@ class StockIndicator extends PanelMenu.Button {
     );
   }
 
+  vfunc_event(event) {
+    const type = event.type();
+    if (type === Clutter.EventType.BUTTON_PRESS) {
+      const button = event.get_button();
+      if (button === Clutter.BUTTON_PRIMARY) {
+        if (this._contextMenu?.isOpen) {
+          this._contextMenu.close();
+        }
+        this._update();
+        return Clutter.EVENT_STOP;
+      }
+      if (button === Clutter.BUTTON_SECONDARY) {
+        this._contextMenu?.toggle();
+        return Clutter.EVENT_STOP;
+      }
+    }
+
+    if (type === Clutter.EventType.BUTTON_RELEASE) {
+      const button = event.get_button();
+      if (button === Clutter.BUTTON_PRIMARY || button === Clutter.BUTTON_SECONDARY) {
+        return Clutter.EVENT_STOP;
+      }
+    }
+
+    return super.vfunc_event(event);
+  }
+
+  _initContextMenu() {
+    this._contextMenu = new PopupMenu.PopupMenu(this, 0.5, St.Side.TOP);
+    Main.uiGroup.add_child(this._contextMenu.actor);
+    this._contextMenu.actor.hide();
+
+    this._menuManager = new PopupMenu.PopupMenuManager(this);
+    this._menuManager.addMenu(this._contextMenu);
+
+    const preferencesItem = new PopupMenu.PopupMenuItem('Preferences');
+    preferencesItem.connect('activate', () => this._openPreferences());
+    this._contextMenu.addMenuItem(preferencesItem);
+
+    this._contextMenu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    this._contextMenu.addMenuItem(
+      new PopupMenu.PopupMenuItem(CONTEXT_MENU_VERSION, {
+        reactive: false,
+        can_focus: false,
+      })
+    );
+  }
+
   async _update() {
+    if (this._isDestroyed) {
+      return;
+    }
+    const updateToken = ++this._updateToken;
     const tickers = this._settings
       .get_strv('tickers')
       .filter((ticker) => typeof ticker === 'string' && ticker.trim().length > 0);
@@ -87,6 +149,9 @@ class StockIndicator extends PanelMenu.Button {
 
     try {
       const quote = await this._fetchQuote(ticker);
+      if (!this._canApplyUpdate(updateToken)) {
+        return;
+      }
       if (!quote) {
         this._setLabel(`${ticker.toUpperCase()} --`);
         this._clearStyle();
@@ -111,10 +176,26 @@ class StockIndicator extends PanelMenu.Button {
 
       this._checkNotifications(ticker, close);
     } catch (error) {
+      if (!this._canApplyUpdate(updateToken)) {
+        return;
+      }
       logError(error, 'Stock Dock update failed');
       this._setLabel(`${ticker.toUpperCase()} err`);
       this._clearStyle();
     }
+  }
+
+  _canApplyUpdate(updateToken) {
+    return !this._isDestroyed && updateToken === this._updateToken;
+  }
+
+  _openPreferences() {
+    if (this._contextMenu?.isOpen) {
+      this._contextMenu.close();
+    }
+    this._extension.openPreferences().catch((error) => {
+      logError(error, 'Stock Dock preferences failed to open');
+    });
   }
 
   _setLabel(text) {
@@ -162,14 +243,19 @@ class StockIndicator extends PanelMenu.Button {
 
   async _fetchText(url) {
     return new Promise((resolve, reject) => {
+      if (!this._session) {
+        reject(new Error('HTTP session unavailable'));
+        return;
+      }
+      const session = this._session;
       const message = Soup.Message.new('GET', url);
-      this._session.send_and_read_async(
+      session.send_and_read_async(
         message,
         GLib.PRIORITY_DEFAULT,
         null,
         (_session, result) => {
           try {
-            const bytes = this._session.send_and_read_finish(result);
+            const bytes = session.send_and_read_finish(result);
             if (message.get_status() !== Soup.Status.OK) {
               reject(new Error(`HTTP ${message.get_status()}`));
               return;
