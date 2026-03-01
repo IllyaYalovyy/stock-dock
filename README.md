@@ -61,6 +61,16 @@ npm run check
 
 More details live in `docs/DEVELOPMENT.md`.
 
+## Release
+
+To package the extension for upload to extensions.gnome.org:
+
+```
+./scripts/pack.sh
+```
+
+This creates `stockdock@etf-v<version>.zip` at the repository root.
+
 ## Project layout
 
 ```

@@ -5,7 +5,7 @@ Thanks for taking a look. Small, focused contributions are the easiest to review
 ## Before you start
 
 - Search existing issues or open a new one to discuss larger changes.
-- Keep GNOME Shell version compatibility in mind (currently 47+).
+- Keep GNOME Shell version compatibility in mind (currently 47-49).
 
 ## Development workflow
 
