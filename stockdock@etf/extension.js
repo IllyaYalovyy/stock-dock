@@ -23,6 +23,13 @@ class StockIndicator extends PanelMenu.Button {
 
     this._extension = extension;
     this._settings = settings;
+    this._tickers = [];
+    this._settingsChangedId = this._settings.connect('changed::tickers', () => {
+      this._loadTickers();
+      this._index = 0;
+      this._update();
+    });
+    this._loadTickers();
     this._session = new Soup.Session();
     this._timeoutId = 0;
     this._index = 0;
@@ -51,6 +58,10 @@ class StockIndicator extends PanelMenu.Button {
   destroy() {
     this._isDestroyed = true;
     this._updateToken += 1;
+    if (this._settingsChangedId) {
+      this._settings.disconnect(this._settingsChangedId);
+      this._settingsChangedId = 0;
+    }
     if (this._timeoutId) {
       GLib.source_remove(this._timeoutId);
       this._timeoutId = 0;
@@ -68,6 +79,12 @@ class StockIndicator extends PanelMenu.Button {
       this._contextMenu = null;
     }
     super.destroy();
+  }
+
+  _loadTickers() {
+    this._tickers = this._settings
+      .get_strv('tickers')
+      .filter((ticker) => typeof ticker === 'string' && ticker.trim().length > 0);
   }
 
   _start() {
@@ -90,7 +107,10 @@ class StockIndicator extends PanelMenu.Button {
         if (this._contextMenu?.isOpen) {
           this._contextMenu.close();
         }
-        this._update();
+        this._icon.opacity = 100;
+        this._update().finally(() => {
+          if (!this._isDestroyed) this._icon.opacity = 255;
+        });
         return Clutter.EVENT_STOP;
       }
       if (button === Clutter.BUTTON_SECONDARY) {
@@ -135,17 +155,15 @@ class StockIndicator extends PanelMenu.Button {
       return;
     }
     const updateToken = ++this._updateToken;
-    const tickers = this._settings
-      .get_strv('tickers')
-      .filter((ticker) => typeof ticker === 'string' && ticker.trim().length > 0);
-    if (!tickers.length) {
+
+    if (!this._tickers.length) {
       this._setLabel('No tickers');
       this._clearStyle();
       return;
     }
 
-    const ticker = tickers[this._index % tickers.length];
-    this._index = (this._index + 1) % tickers.length;
+    const ticker = this._tickers[this._index % this._tickers.length];
+    this._index = (this._index + 1) % this._tickers.length;
 
     try {
       const quote = await this._fetchQuote(ticker);
